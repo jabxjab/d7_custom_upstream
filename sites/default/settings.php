@@ -668,3 +668,13 @@ $conf['file_scan_ignore_directories'] = array(
   'node_modules',
   'bower_components',
 );
+
+$databases['default']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'pantheon',
+  'username' => 'pantheon',
+  'password' => 'd334e30b387243008a3978098f168f06',
+  'port' => 16693,
+  'host' => 'dbserver.dev.90f8cfdb-295b-41ad-9332-31e70ebbf25d.drush.in',
+  'prefix' => '',
+);
