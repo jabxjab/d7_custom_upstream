@@ -25,6 +25,27 @@ function business_breadcrumb($variables) {
 }
 
 /**
+ * Override or insert variables into the html template.
+ */
+function business_process_html(&$vars) {
+  // Hook into color.module
+  if (module_exists('color')) {
+    _color_html_alter($vars);
+  }
+}
+
+/**
+ * Override or insert variables into the page template.
+ */
+function business_process_page(&$variables) {
+  // Hook into color.module.
+  if (module_exists('color')) {
+    _color_page_alter($variables);
+  }
+ 
+}
+
+/**
  * Override or insert variables into the page template.
  */
 function business_preprocess_page(&$vars) {
@@ -59,6 +80,23 @@ function business_preprocess_page(&$vars) {
   }
   else {
     $vars['secondary_menu'] = FALSE;
+  }
+
+  // Build footer_copyright variable to template.
+  if (theme_get_setting('footer_copyright')) {
+    if ($vars['site_name']) {
+      $vars['footer_copyright'] = t('Copyright &copy; @year, @sitename.',
+        array('@year' => date("Y"), '@sitename' => $vars['site_name'])
+      );
+    }
+    else {
+      $vars['footer_copyright'] = t('Copyright &copy; @year.',
+        array('@year' => date("Y"), '@sitename' => $vars['site_name'])
+      );
+    }
+  }
+  else {
+    $vars['footer_copyright'] = NULL;
   }
 }
 

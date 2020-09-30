@@ -18,42 +18,31 @@
   <title><?php print $head_title; ?></title>
   <?php print $styles; ?>
   <?php print $scripts; ?>
+  <!--[if lt IE 9]><script src="<?php print base_path() . drupal_get_path('theme', 'business') . '/js/html5.js'; ?>"></script><![endif]-->
 </head>
 
 <body class="<?php print $classes; ?>" <?php print $attributes;?>>
 
-<div id="wrapper" class="clearfix">
+<div id="wrap" class="clearfix">
 
   <div id="skip-link">
     <a href="#main-content" class="element-invisible element-focusable"><?php print t('Skip to main content'); ?></a>
   </div>
 
-  <header id="header" role="banner" class="clearfix">
-	<?php if ($logo): ?>
-      <a href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>" id="logo">
-        <img src="<?php print $logo; ?>" alt="<?php print t('Home'); ?>" />
-      </a>
-    <?php endif; ?>
-    <?php if ($site_name || $site_slogan): ?>
-      <div id="site-name-slogan">
-        <?php if ($site_name): ?>
-          <?php if ($title): ?>
-            <div id="site-name"><strong>
-              <a href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>"><span><?php print $site_name; ?></span></a>
-            </strong></div>
-          <?php else: /* Use h1 when the content title is empty */ ?>
-            <h1 id="site-name">
-              <a href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>"><span><?php print $site_name; ?></span></a>
-            </h1>
-          <?php endif; ?>
-        <?php endif; ?>
-        <?php if ($site_slogan): ?>
-          <div id="site-slogan"><?php print $site_slogan; ?></div>
-        <?php endif; ?>
+   <header id="header" class="clearfix" role="banner">
+
+    <hgroup>
+      <?php if ($logo): ?>
+       <div id="logo">
+        <a href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>"><img src="<?php print $logo; ?>" alt="<?php print t('Home'); ?>" /></a>
+        </div>
+      <?php endif; ?>
+      <div id="sitename">
+        <h2><a href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>"><?php print $site_name; ?></a></h2>
+        <p><?php if ($site_slogan): ?><?php print $site_slogan; ?><?php endif; ?></p><!--site slogan-->
       </div>
-    <?php endif; ?>
-    <?php print render($page['header']); ?>
-  </header> <!-- /#header -->
+    </hgroup>
+  </header>
 
   <section id="main" role="main" class="clearfix">
     <?php print $messages; ?>
