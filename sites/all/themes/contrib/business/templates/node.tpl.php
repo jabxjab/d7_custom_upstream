@@ -94,19 +94,17 @@
       </header>
   <?php endif; ?>
 
-  <div class="content"<?php print $content_attributes; ?>>
+  <div class="<?php print $classes; ?>"<?php print $content_attributes; ?>>
     <?php
       // Hide comments, tags, and links now so that we can render them later.
       hide($content['comments']);
       hide($content['links']);
-      hide($content['field_tags']);
       print render($content);
     ?>
   </div>
 
-  <?php if (!empty($content['field_tags']) || !empty($content['links'])): ?>
+  <?php if (!empty($content['links'])): ?>
     <footer>
-      <?php print render($content['field_tags']); ?>
       <?php print render($content['links']); ?>
     </footer>
   <?php endif; ?>
