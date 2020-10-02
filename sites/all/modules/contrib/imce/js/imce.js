@@ -801,17 +801,12 @@ updateUI: function() {
   if (furl.charAt(furl.length - 1) != '/') {
     furl = imce.conf.furl = furl + '/';
   }
-  imce.conf.modfix = imce.conf.clean && furl.split('/')[3] === 'system';
+  imce.conf.modfix = imce.conf.clean && furl.indexOf(host + '/system/') > -1;
   if (absurls && !isabs) {
     imce.conf.furl = baseurl + furl;
   }
   else if (!absurls && isabs && furl.indexOf(baseurl) == 0) {
-    furl = furl.substr(baseurl.length);
-    // Server base url is defined with a port which is missing in current page url.
-    if (furl.charAt(0) === ':') {
-      furl = furl.replace(/^:\d*/, '');
-    }
-    imce.conf.furl = furl;
+    imce.conf.furl = furl.substr(baseurl.length);
   }
   //convert button elements to input elements.
   imce.convertButtons(imce.FW);
