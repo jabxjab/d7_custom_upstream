@@ -29,4 +29,4 @@ www.devsaran.com
 Help and Support Us
 =====================
 Please consider a small donation 
-Paypal ID : donationt@devsaran.com
+Paypal ID : donation@devsaran.com

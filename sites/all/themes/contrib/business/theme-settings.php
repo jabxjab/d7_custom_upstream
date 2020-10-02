@@ -11,9 +11,15 @@ function business_form_system_theme_settings_alter(&$form, &$form_state) {
 
   $form['busi_settings'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Simple Corporate Theme Settings'),
+    '#title' => t('Business Theme Settings'),
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
+  );
+  $form['busi_settings']['show_front_content'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show content and sidebar on front page'),
+    '#default_value' => theme_get_setting('show_front_content','business'),
+    '#description' => t('Check this option to show content and sidebar on the front page.'),
   );
   $form['busi_settings']['breadcrumbs'] = array(
     '#type' => 'checkbox',

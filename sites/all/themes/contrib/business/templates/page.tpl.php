@@ -69,31 +69,32 @@
 
   <header id="header" class="clearfix" role="banner">
 
-    <hgroup>
+    <div>
       <?php if ($logo): ?>
        <div id="logo">
         <a href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>"><img src="<?php print $logo; ?>" alt="<?php print t('Home'); ?>" /></a>
         </div>
       <?php endif; ?>
-      <div id="sitename">
+      <hgroup id="sitename">
         <h2><a href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>"><?php print $site_name; ?></a></h2>
         <p><?php if ($site_slogan): ?><?php print $site_slogan; ?><?php endif; ?></p><!--site slogan-->
-      </div>
-    </hgroup>
+      </hgroup>
+    </div>
     <nav id="navigation" class="clearfix" role="navigation">
       <div id="main-menu">
         <?php 
-        $main_menu_tree = menu_tree(variable_get('menu_main_links_source', 'main-menu')); 
-        print drupal_render($main_menu_tree);
+          if (module_exists('i18n_menu')) {
+            $main_menu_tree = i18n_menu_translated_tree(variable_get('menu_main_links_source', 'main-menu'));
+          } else {
+            $main_menu_tree = menu_tree(variable_get('menu_main_links_source', 'main-menu'));
+          }
+          print drupal_render($main_menu_tree);
         ?>
       </div>
     </nav><!-- end main-menu -->
   </header>
   
   <?php print render($page['header']); ?>
-
-
-  <?php print render($page['help']); ?>
 
   <?php print render($page['secondary_content']); ?>
 
@@ -116,34 +117,41 @@
       <?php print render($page['sidebar_first']); ?>
     </aside>  <!-- /#sidebar-first -->
   <?php endif; ?>
-  
-  <div class="clear"></div>
-
-  <div class="clearfix" id="footer-saran">
-      <div id="footer-wrap">
-    <?php if ($page['footer_first']): ?>
-    <div class="footer-box"><?php print render($page['footer_first']); ?></div>
-    <?php endif; ?>
-    <?php if ($page['footer_second']): ?>
-    <div class="footer-box"><?php print render($page['footer_second']); ?></div>
-    <?php endif; ?>
-    <?php if ($page['footer_third']): ?>
-    <div class="footer-box"><?php print render($page['footer_third']); ?></div>
-    <?php endif; ?>
-    <?php if ($page['footer_fourth']): ?>
-    <div class="footer-box remove-margin"><?php print render($page['footer_fourth']); ?></div>
-    <?php endif; ?>
-      </div>
   </div>
-  <!--END footer -->
   <div class="clear"></div>
-  <?php print render($page['footer']) ?>
-  <div class="clear"></div>
-
-  <?php if (theme_get_setting('footer_copyright')): ?>
-  <div id="copyright"><?php print t('Copyright'); ?> &copy; <?php echo date("Y"); ?>, <?php print $site_name; ?>.</div>
+  
+  <?php if ($page['footer_first'] || $page['footer_second'] || $page['footer_third'] || $page['footer_fourth']): ?>
+    <div id="footer-saran" class="clearfix">
+     <div id="footer-wrap">
+      <?php if ($page['footer_first']): ?>
+      <div class="footer-box"><?php print render($page['footer_first']); ?></div>
+      <?php endif; ?>
+      <?php if ($page['footer_second']): ?>
+      <div class="footer-box"><?php print render($page['footer_second']); ?></div>
+      <?php endif; ?>
+      <?php if ($page['footer_third']): ?>
+      <div class="footer-box"><?php print render($page['footer_third']); ?></div>
+      <?php endif; ?>
+      <?php if ($page['footer_fourth']): ?>
+      <div class="footer-box remove-margin"><?php print render($page['footer_fourth']); ?></div>
+      <?php endif; ?>
+     </div>
+    </div>
+    <div class="clear"></div>
   <?php endif; ?>
-  <?php if (theme_get_setting('footer_credits')): ?>
-  <div id="credits"> <?php print t('Sponsored by'); ?> <a href="http://www.quardz.com" target="_BLANK">Quardz</a>  |  <strong><?php print t('Developed by'); ?>  <a href="http://www.devsaran.com" target="_BLANK">Devsaran</a></strong>.</div>
+  
+  <!--END footer -->
+  <?php print render($page['footer']) ?>
+
+  <?php if (theme_get_setting('footer_copyright') || theme_get_setting('footer_credits')): ?>
+  <div class="clear"></div>
+  <div id="copyright">
+    <?php if ($footer_copyright): ?>
+      <?php print $footer_copyright; ?>
+    <?php endif; ?>
+    <?php if (theme_get_setting('footer_credits')): ?>
+      <span class="credits"><?php print t('Designed by'); ?>  <a href="http://www.devsaran.com">Devsaran</a>.</span>
+    <?php endif; ?>
+  </div>
   <?php endif; ?>
 </div>
