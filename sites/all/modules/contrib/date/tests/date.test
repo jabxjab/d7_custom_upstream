@@ -4,9 +4,7 @@
  * @file
  * Test date UI.
  */
-/**
- *
- */
+
 class DateUITestCase extends DateFieldBasic {
 
   /**
@@ -23,8 +21,8 @@ class DateUITestCase extends DateFieldBasic {
   /**
    * @todo.
    */
-  public function setUp(array $modules = array()) {
-    parent::setUp($modules);
+  public function setUp() {
+    parent::setUp();
 
     variable_set('date_format_long', 'D, m/d/Y - H:i');
   }
@@ -90,5 +88,4 @@ class DateUITestCase extends DateFieldBasic {
     $this->drupalPost('node/add/story', $edit, t('Save'));
     $this->assertText($edit['body[und][0][value]'], 'Test node has been created');
   }
-
 }
