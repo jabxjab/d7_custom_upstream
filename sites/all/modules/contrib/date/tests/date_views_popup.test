@@ -2,11 +2,9 @@
 
 /**
  * @file
- * Tests date popup in Views.
+ * Tests date popup in Views
  */
-/**
- *
- */
+
 class DateViewsPopupTestCase extends DateFieldBasic {
   /**
    * Test info.
@@ -16,20 +14,18 @@ class DateViewsPopupTestCase extends DateFieldBasic {
       'name' => 'Date Views - Popup Test',
       'description' => 'Tests date popup in Views',
       'group' => 'Date',
-      'dependencies' => array('ctools', 'views'),
     );
   }
 
   /**
-   * {@inheritdoc}
+   * Test setup actions.
    */
-  public function setUp(array $modules = array()) {
-    $modules[] = 'date_popup';
-    $modules[] = 'date_views';
-    $modules[] = 'ctools';
-    $modules[] = 'views';
-    $modules[] = 'views_ui';
-    parent::setUp($modules);
+  public function setUp() {
+    parent::setUp();
+    // Load the 'date_popup', 'date_views', 'views', 'views_ui', 'ctools' modules.
+    $modules = array('date_popup', 'date_views', 'views', 'views_ui', 'ctools');
+    $success = module_enable($modules, TRUE);
+    $this->assertTrue($success, t('Enabled modules: %modules', array('%modules' => implode(', ', $modules))));
 
     // Reset/rebuild all data structures after enabling the modules.
     $this->resetAll();
@@ -107,5 +103,4 @@ class DateViewsPopupTestCase extends DateFieldBasic {
     // Go to view page.
     $this->drupalGet('test-date-popup');
   }
-
 }
