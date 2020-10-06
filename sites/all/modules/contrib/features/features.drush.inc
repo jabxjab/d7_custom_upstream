@@ -245,9 +245,6 @@ function drush_features_list() {
       );
     }
   }
-  if (version_compare(DRUSH_VERSION, '6.0', '<')) {
-    drush_print_table($rows, TRUE);
-  }
   return $rows;
 }
 
@@ -346,13 +343,8 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
     // Rewrite * to %. Let users use both as wildcard.
     $pattern = strtr($pattern, array('*' => '%'));
     $sources = array();
-    if (strpos($pattern, ':') !== FALSE) {
-      list($source_pattern, $component_pattern) = explode(':', $pattern, 2);
-    }
-    else {
-      $source_pattern = $pattern;
-      $component_pattern = '';
-    }
+    $source_pattern = strtok($pattern, ':');
+    $component_pattern = strtok(':');
     // If source is empty, use a pattern.
     if ($source_pattern == '') {
       $source_pattern = '%';
@@ -519,7 +511,7 @@ function drush_features_export() {
         drush_die('Aborting.');
       }
       $export = _drush_features_generate_export($items, $module);
-      _features_populate($items, $export['info'], $export['name']);
+      _features_populate($items, $export[info], $export[name]);
       _drush_features_export($export['info'], $module, $directory);
     }
   }
@@ -820,7 +812,7 @@ function drush_features_revert() {
     }
   }
   else {
-    drush_print_table(drush_features_list());
+    drush_features_list();
     return;
   }
 }
@@ -874,7 +866,7 @@ function drush_features_revert_all() {
  */
 function drush_features_diff() {
   if (!$args = func_get_args()) {
-    drush_print_table(drush_features_list());
+    drush_features_list();
     return;
   }
   $module = $args[0];
