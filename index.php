@@ -19,14 +19,3 @@ define('DRUPAL_ROOT', getcwd());
 require_once DRUPAL_ROOT . '/includes/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 menu_execute_active_handler();
-
-// Update 030.
-// Update 031.
-// Update 032.
-// Master went ahead test 001.
-// Master went ahead test 002.
-// Upstream updates 001.
-// Master went ahead test 002.
-// Master went ahead test 003.
-// Master went ahead test 004.
-// Master went ahead test 005.
