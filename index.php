@@ -19,29 +19,3 @@ define('DRUPAL_ROOT', getcwd());
 require_once DRUPAL_ROOT . '/includes/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 menu_execute_active_handler();
-
-// Update 001.
-// Update 002.
-// Update 003.
-// Update 004.
-// Update 005.
-// Update 006.
-// Update 007.
-// Update 008.
-// Update 009.
-// Update 010.
-// Update 011.
-// Update 012.
-// Update 013.
-// Update 014.
-// Update 015.
-// Update 016.
-// Update 017.
-// Update 018.
-// Update 019.
-// Update 020.
-// Update 021.
-// Update 022.
-// Update 023.
-// Update 024.
-// Update 025.
