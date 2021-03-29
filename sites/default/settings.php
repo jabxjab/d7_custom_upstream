@@ -680,3 +680,4 @@ $databases['default']['default'] = array(
 );
 
 // MWA test 001.
+// MWA test 002.
