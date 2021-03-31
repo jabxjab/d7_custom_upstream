@@ -687,3 +687,4 @@ $databases['default']['default'] = array(
 // MWA test 006.
 // MWA test 007.
 // MWA test 008.
+// MWA test 009.
