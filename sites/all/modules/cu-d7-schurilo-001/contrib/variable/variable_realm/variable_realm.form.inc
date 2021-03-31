@@ -15,20 +15,34 @@ function variable_realm_select_variables_form($form, &$form_state, $realm_name) 
   // we want to preserve.
   $list = array_unique(array_merge($optional, $current));
   $form['realm_name'] = array('#type' => 'value', '#value' => $realm_name);
+  $form['message']['select']['#markup'] = '<h3>' . t('Select variables to be set for this realm.') . '</h3>';
+  if ($current) {
+    $form['message']['current']['#markup']  = '<p>' . t('Currently selected variables are: <em>!variables</em>', array('!variables' => variable_list_name($current))) . '</p>';
+  }
   $form['variables'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Select variables to be set for this realm'),
-    '#theme' => 'variable_table_select',
+    '#type' => 'vertical_tabs',
     '#tree' => TRUE,
   );
-  foreach ($list as $name) {
-    // Variable names may clash with form element names, so we need to replace '[' and ']'
-    $safename = str_replace(array('[', ']'), array('<', '>'), $name);
-    $form['variables'][$safename] = array(
-      '#type' => 'checkbox',
-      '#default_value' => in_array($name, $current),
-      '#variable_name' => $name,
+  $variable_groups = variable_group_variables($list);
+  foreach ($variable_groups as $group => $group_list) {
+    $group_info = variable_get_group($group);
+    $group_current = array_intersect($group_list, $current);
+    $form['variables'][$group] = array(
+      '#type' => 'fieldset',
+      '#title' => $group_info['title'],
+      '#theme' => 'variable_table_select',
+      '#collapsible' => TRUE, '#collapsed' => TRUE,
     );
+    foreach ($group_list as $name) {
+      // Variable names may clash with form element names, so we need to replace '[' and ']'
+      $safename = str_replace(array('[', ']'), array('<', '>'), $name);
+      $form['variables'][$group][$safename] = array(
+        '#type' => 'checkbox',
+        '#default_value' => in_array($name, $group_current),
+        '#variable_name' => $name,
+        '#parents' => array('variables', $safename),
+      );
+    }
   }
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
   return $form;
@@ -44,6 +58,7 @@ function variable_realm_select_variables_form_submit($form, &$form_state) {
   $old_variables = $controller->getEnabledVariables();
   // Get main variable names
   $variables = $form_state['values']['variables'];
+  unset($variables['variables__active_tab']);
   $variables = array_keys(array_filter($variables));
   // Translate variable names
   foreach ($variables as $index => $name) {
@@ -71,7 +86,13 @@ function variable_realm_edit_variables_form($form, &$form_state, $realm_name, $r
   $form['realm_name'] = array('#type' => 'value', '#value' => $realm_name);
   $form['realm_key'] = array('#type' => 'value', '#value' => $realm_key);
   $options['realm'] = variable_realm($realm_name, $realm_key);
+
   if ($variable_list = $controller->getEnabledVariables()) {
+    $form = variable_base_form($form, $form_state, $variable_list, $options);
+    // variable_base_form() adds its own submit handler overriding the default,
+    // so we need to add it as a explicit submit callback here.
+    $form['#submit'][] = 'variable_realm_edit_variables_form_submit';
+
     // Group variables by variable group for vertical tabls
     $group_list = array();
     foreach ($variable_list as $variable_name) {
@@ -124,6 +145,8 @@ function variable_realm_edit_variables_form_submit($form, &$form_state) {
       }
     }
   }
+  // Redirect later depending on query string parameters.
+  _variable_realm_form_submit_redirect($form, $form_state);
 }
 
 /**
@@ -133,6 +156,11 @@ function variable_realm_form_key_selector($realm_name, $current_key) {
   $element_name = VARIABLE_REALM_FORM_SWITCHER . $realm_name;
   $query_name = 'variable_realm_' . $realm_name . '_key';
   $controller = variable_realm_controller($realm_name);
+  $keys = $controller->getAllKeys();
+  // Don't show selector if there aren't any keys to select.
+  if (empty($keys)) {
+    return array();
+  }
   $form[$element_name] = array(
     '#type' => 'fieldset',
     '#title' => t('There are %name variables in this form', array('%name' => $controller->getVariableName())),
@@ -142,7 +170,7 @@ function variable_realm_form_key_selector($realm_name, $current_key) {
   // Replace only this element on current query string, there may be others.
   $current_query = $_GET;
   unset($current_query['q']);
-  foreach ($controller->getAllKeys() as $realm_key => $key_name) {
+  foreach ($keys as $realm_key => $key_name) {
     $query[VARIABLE_REALM_QUERY_STRING . $realm_name] = $realm_key;
     $link =  l($key_name, $_GET['q'], array('query' => $query + $current_query));
     $items[] = $current_key == $realm_key ? '<strong>' . $link . '</strong>' : $link;
@@ -260,22 +288,62 @@ function variable_realm_variable_settings_form_submit($form, &$form_state) {
 }
 
 /**
- * Save multilingual variables and remove them from form.
+ * Process system_theme_settings form submissions.
  *
- * Note the theme variable has already been set into 'variable_realm_theme_settings'
+ * @see system_theme_settings_submit()
  */
 function variable_realm_variable_theme_form_submit($form, &$form_state) {
-  foreach ($form['#realm_theme'] as $realm_name => $variable_name) {
-    $realm_controller = variable_realm_controller($realm_name);
-    $settings = variable_get('variable_realm_theme_settings');
-    $realm_key = $form['#realm_keys'][$realm_name];
-    variable_realm_set($realm_name, $realm_key, $variable_name, $settings);
-    // If current is default language, we allow global (without language) variables to be set too
-    if ($realm_key == $realm_controller->getDefaultKey()) {
-      variable_set($variable_name, $settings);
-    }
-    variable_del('variable_realm_theme_settings');
+  // Regular theme submission without variable set.
+  $values = $form_state['values'];
+
+  // If the user uploaded a new logo or favicon, save it to a permanent location
+  // and use it in place of the default theme-provided file.
+  if ($file = $values['logo_upload']) {
+    unset($values['logo_upload']);
+    $filename = file_unmanaged_copy($file->uri);
+    $values['default_logo'] = 0;
+    $values['logo_path'] = $filename;
+    $values['toggle_logo'] = 1;
   }
+  if ($file = $values['favicon_upload']) {
+    unset($values['favicon_upload']);
+    $filename = file_unmanaged_copy($file->uri);
+    $values['default_favicon'] = 0;
+    $values['favicon_path'] = $filename;
+    $values['toggle_favicon'] = 1;
+  }
+
+  // If the user entered a path relative to the system files directory for
+  // a logo or favicon, store a public:// URI so the theme system can handle it.
+  if (!empty($values['logo_path'])) {
+    $values['logo_path'] = _system_theme_settings_validate_path($values['logo_path']);
+  }
+  if (!empty($values['favicon_path'])) {
+    $values['favicon_path'] = _system_theme_settings_validate_path($values['favicon_path']);
+  }
+
+  if (empty($values['default_favicon']) && !empty($values['favicon_path'])) {
+    $values['favicon_mimetype'] = file_get_mimetype($values['favicon_path']);
+  }
+  $key = $values['var'];
+
+  // Exclude unnecessary elements before saving.
+  unset($values['var'], $values['submit'], $values['reset'], $values['form_id'], $values['op'], $values['form_build_id'], $values['form_token']);
+
+  // Set realm variable.
+  $variable_name = $key;
+  $realm_name = $form['#realm_theme'];
+  $realm_key = $form['#realm_keys'][$realm_name];
+  variable_realm_set($realm_name, $realm_key, $variable_name, $values);
+
+  // If current is default realm key, set global variable too.
+  $realm_controller = variable_realm_controller($realm_name);
+  if ($realm_key == $realm_controller->getDefaultKey()) {
+    variable_set($variable_name, $values);
+  }
+  // Confirmation, clear cache, taken from system_theme_settings_submit()
+  drupal_set_message(t('The configuration options have been saved.'));
+  cache_clear_all();
   // Redirect later depending on query string parameters.
   _variable_realm_form_submit_redirect($form, $form_state);
 }
@@ -310,5 +378,34 @@ function _variable_realm_form_submit_redirect($form, &$form_state) {
     }
     // Parameters to be passed to drupal_goto().
     $form_state['redirect'] = array(current_path(), array('query' => $query));
+  }
+}
+
+/**
+ * Add realm switcher to the form.
+ */
+function _variable_realm_variable_settings_form_switcher(&$form) {
+  // Add switchers for current realms and current key.
+  // Add realm values and subform realm / key selector.
+  foreach (array_keys($form['#realm_variables']) as $realm_name) {
+    $current_key = variable_realm_form_key_current($realm_name);
+    $info = variable_realm_info($realm_name);
+    if (!empty($info['form switcher'])) {
+      $form += variable_realm_form_key_selector($realm_name, $current_key);
+    }
+    $form['#realm_keys'][$realm_name] = $current_key;
+  }
+  // Make sure realm switchers are added for all parent realms of current ones.
+  foreach (variable_realm_list_all() as $realm_name => $realm_controller) {
+    if (($parent_realms = $realm_controller->getParentRealms()) && !empty($form['#realm_variables'][$realm_name]) && empty($form[VARIABLE_REALM_FORM_SWITCHER . $realm_name])) {
+      // Check we have selectors for the other realms.
+      foreach ($parent_realms as $realm) {
+        $info = variable_realm_info($realm);
+        if (!empty($info['form switcher']) && empty($form[VARIABLE_REALM_FORM_SWITCHER . $realm])) {
+          $current_key = variable_realm_form_key_current($realm);
+          $form += variable_realm_form_key_selector($realm, $current_key);
+        }
+      }
+    }
   }
 }
