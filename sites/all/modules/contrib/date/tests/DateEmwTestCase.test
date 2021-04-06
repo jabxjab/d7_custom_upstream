@@ -8,7 +8,7 @@
 /**
  * Test Date (ISO) and the Entity Metadata Wrappers play well together.
  */
-class DateFieldEntityTestCase extends DrupalWebTestCase {
+class DateEmwTestCase extends DrupalWebTestCase {
 
   /**
    * Info about this test.
@@ -32,6 +32,7 @@ class DateFieldEntityTestCase extends DrupalWebTestCase {
     $modules[] = 'field';
     $modules[] = 'field_ui';
     $modules[] = 'entity';
+    $modules[] = 'entity_token';
     parent::setUp($modules);
 
     // Select a specific default timezone, and turn off user-configurable
@@ -98,23 +99,41 @@ class DateFieldEntityTestCase extends DrupalWebTestCase {
     $this->drupalCreateNode($edit);
     // Fetch the Node.
     $node = $this->drupalGetNodeByTitle($edit['title']);
-    // At this point we have a node with the appropriate field types availabel.
+    // Prepare variables for token replacement.
+    $variables['node'] = $node;
+    // At this point we have a node with the appropriate field types available.
     $wrapper = entity_metadata_wrapper('node', $node);
     $original = '1482721671';
     foreach ($this->date_types as $type => $label) {
       $field = 'field_test_' . $type;
       $wrapper->{$field} = $original;
-      $fetch = $wrapper->{$field}->value();
+      $from_metadata_wrapper = $wrapper->{$field}->value();
 
       $this->assertEqual(
         $original,
-        $fetch,
+        $from_metadata_wrapper,
         t(
           '!type plays nicely with Entity Metadata Wrappers. !original == !fetched',
           array(
             '!type' => $label,
             '!original' => $original,
-            '!fetched' => $fetch,
+            '!fetched' => $from_metadata_wrapper,
+          )
+        )
+      );
+
+      $token = "[node:field-test-${type}:raw]";
+      $from_token = token_replace($token, $variables);
+
+      $this->assertEqual(
+        $original,
+        $from_token,
+        t(
+          '!type plays nicely with Entity tokens. !original == !fetched',
+          array(
+            '!type' => $label,
+            '!original' => $original,
+            '!fetched' => $from_token,
           )
         )
       );
