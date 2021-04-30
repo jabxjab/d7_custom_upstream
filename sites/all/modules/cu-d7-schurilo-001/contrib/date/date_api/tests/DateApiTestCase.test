@@ -2,10 +2,14 @@
 
 /**
  * @file
- * Test Date API functions
+ * Test Date API functions.
  */
 
-class DateAPITestCase extends DrupalWebTestCase {
+/**
+ * Test Date API functions.
+ */
+class DateApiTestCase extends DrupalWebTestCase {
+
   /**
    * @todo.
    */
@@ -18,11 +22,12 @@ class DateAPITestCase extends DrupalWebTestCase {
   }
 
   /**
-   * @todo.
+   * {@inheritdoc}
    */
-  public function setUp() {
-    // Load the date_api module.
-    parent::setUp('date_api');
+  public function setUp(array $modules = array()) {
+    $modules[] = 'date_api';
+    parent::setUp($modules);
+
     variable_set('date_api_use_iso8601', FALSE);
     variable_set('date_first_day', 1);
   }
@@ -132,11 +137,11 @@ class DateAPITestCase extends DrupalWebTestCase {
     // Test week range with calendar weeks.
     variable_set('date_first_day', 0);
     variable_set('date_api_use_iso8601', FALSE);
-    $expected = '2008-01-27 to 2008-02-03';
+    $expected = '2008-01-27 to 2008-02-02';
     $result = date_week_range(5, 2008);
     $value = $result[0]->format(DATE_FORMAT_DATE) . ' to ' . $result[1]->format(DATE_FORMAT_DATE);
     $this->assertEqual($expected, $value, "Test calendar date_week_range(5, 2008): should be $expected, found $value.");
-    $expected = '2009-01-25 to 2009-02-01';
+    $expected = '2009-01-25 to 2009-01-31';
     $result = date_week_range(5, 2009);
     $value = $result[0]->format(DATE_FORMAT_DATE) . ' to ' . $result[1]->format(DATE_FORMAT_DATE);
     $this->assertEqual($expected, $value, "Test calendar date_week_range(5, 2009): should be $expected, found $value.");
@@ -144,11 +149,11 @@ class DateAPITestCase extends DrupalWebTestCase {
     // And now with ISO weeks.
     variable_set('date_first_day', 1);
     variable_set('date_api_use_iso8601', TRUE);
-    $expected = '2008-01-28 to 2008-02-04';
+    $expected = '2008-01-28 to 2008-02-03';
     $result = date_week_range(5, 2008);
     $value = $result[0]->format(DATE_FORMAT_DATE) . ' to ' . $result[1]->format(DATE_FORMAT_DATE);
     $this->assertEqual($expected, $value, "Test ISO date_week_range(5, 2008): should be $expected, found $value.");
-    $expected = '2009-01-26 to 2009-02-02';
+    $expected = '2009-01-26 to 2009-02-01';
     $result = date_week_range(5, 2009);
     $value = $result[0]->format(DATE_FORMAT_DATE) . ' to ' . $result[1]->format(DATE_FORMAT_DATE);
     $this->assertEqual($expected, $value, "Test ISO date_week_range(5, 2009): should be $expected, found $value.");
@@ -270,7 +275,7 @@ class DateAPITestCase extends DrupalWebTestCase {
     $value = $date->getOffset();
     $this->assertEqual($expected, $value, "The current offset should be $expected, found $value.");
 
-     // Create date object from datetime string and convert it to a local date.
+    // Create date object from datetime string and convert it to a local date.
     $input = '1970-01-01 00:00:00';
     $timezone = 'UTC';
     $date = new dateObject($input, $timezone);
@@ -327,7 +332,7 @@ class DateAPITestCase extends DrupalWebTestCase {
     $value = $date->getOffset();
     $this->assertEqual($expected, $value, "The current offset should be $expected, found $value.");
 
-     // Create year-only date.
+    // Create year-only date.
     $input = '2009';
     $timezone = NULL;
     $format = 'Y';
@@ -336,7 +341,7 @@ class DateAPITestCase extends DrupalWebTestCase {
     $expected = '2009';
     $this->assertEqual($expected, $value, "Test new dateObject($input, $timezone, $format): should be $expected, found $value.");
 
-     // Create month and year-only date.
+    // Create month and year-only date.
     $input = '2009-10';
     $timezone = NULL;
     $format = 'Y-m';
@@ -345,7 +350,7 @@ class DateAPITestCase extends DrupalWebTestCase {
     $expected = '2009-10';
     $this->assertEqual($expected, $value, "Test new dateObject($input, $timezone, $format): should be $expected, found $value.");
 
-     // Create time-only date.
+    // Create time-only date.
     $input = '0000-00-00T10:30:00';
     $timezone = NULL;
     $format = 'Y-m-d\TH:i:s';
@@ -354,7 +359,7 @@ class DateAPITestCase extends DrupalWebTestCase {
     $expected = '10:30:00';
     $this->assertEqual($expected, $value, "Test new dateObject($input, $timezone, $format): should be $expected, found $value.");
 
-     // Create time-only date.
+    // Create time-only date.
     $input = '10:30:00';
     $timezone = NULL;
     $format = 'H:i:s';
@@ -389,13 +394,36 @@ class DateAPITestCase extends DrupalWebTestCase {
       $this->assertFalse(date_range_valid($range), "$range recognized as an invalid date range.");
     }
 
-    // Test for invalid month names when we are using a short version of the month
+    // Test for invalid month names when we are using a short version of the
+    // month.
     $input = '23 abc 2012';
     $timezone = NULL;
     $format = 'd M Y';
-    $date = new dateObject($input, $timezone, $format);
+    $date = @new dateObject($input, $timezone, $format);
     $this->assertNotEqual(count($date->errors), 0, '23 abc 2012 should be an invalid date');
 
+    // Test Granularity.
+    $input = '2005-06-01 10:30:45';
+    $timezone = NULL;
+    $format = 'Y-m-d H:i:s';
+
+    $date = new dateObject($input, $timezone, $format);
+    $date->removeGranularity('hour');
+    $date->removeGranularity('second');
+    $date->removeGranularity('minute');
+
+    $value = $date->format($format);
+    $expected = '2005-06-01';
+    $this->assertEqual($expected, $value, "The date with removed granularity should be $expected, found $value.");
+
+    $date->addGranularity('hour');
+    $date->addGranularity('second');
+    $date->addGranularity('minute');
+
+    $value = $date->format($format);
+    $expected = '2005-06-01 10:30:45';
+
+    $this->assertEqual($expected, $value, "The date with added granularity should be $expected, found $value.");
   }
 
   /**
@@ -406,4 +434,5 @@ class DateAPITestCase extends DrupalWebTestCase {
     variable_del('date_api_use_iso8601');
     parent::tearDown();
   }
+
 }
